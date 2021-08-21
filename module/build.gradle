@@ -12,6 +12,7 @@ android {
                         "-DRIRU_MODULE_API_VERSION=$moduleMaxRiruApiVersion",
                         "-DRIRU_MODULE_VERSION=$moduleVersionCode",
                         "-DRIRU_MODULE_VERSION_NAME:STRING=\"$moduleVersion\""
+                        "-DRIRU_MODULE_MIN_API_VERSION=$moduleMinRiruApiVersion"
 
             }
         }
@@ -25,6 +26,7 @@ android {
             version "3.10.2"
         }
     }
+    ndkVersion '23.0.7599858'
 }
 
 repositories {
@@ -34,7 +36,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'rikka.ndk:riru:10'
+    implementation 'dev.rikka.ndk:riru:26.0.0'
 }
 
 def outDir = file("$rootDir/out")

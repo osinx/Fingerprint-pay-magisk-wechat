@@ -4,12 +4,12 @@ ext {
     moduleName = "指纹支付 - 微信"
     moduleAuthor = "Jason Eric"
     moduleDescription = "让微信支持指纹支付 Fingerprint pay for WeChat."
-    moduleVersion = "v3.9.21"
+    moduleVersion = "v3.9.23"
     moduleVersionCode = 2
 
-    moduleMinRiruApiVersion = 9
-    moduleMinRiruVersionName = "v22.0"
-    moduleMaxRiruApiVersion = 10
+    moduleMinRiruApiVersion = 24
+    moduleMinRiruVersionName = "v24.0.0"
+    moduleMaxRiruApiVersion = 26
 
     moduleProp = [
             name       : moduleName,

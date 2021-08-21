@@ -1,5 +1,3 @@
-#include <stdbool.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <jni.h>
 #include <sys/types.h>
@@ -10,16 +8,16 @@
 #include "log.h"
 
 static bool sHookEnable = false;
-static char *sAppDataDir = NULL;
+static char *sAppDataDir = nullptr;
 
-static char *jstringToC(JNIEnv * env, jstring jstr){
-    char *ret = NULL;
+static char *jstringToC(JNIEnv *env, jstring jstr) {
+    char *ret = nullptr;
     if (jstr) {
-        const char* str = env->GetStringUTFChars(jstr, NULL);
-        if (str != NULL) {
+        const char *str = env->GetStringUTFChars(jstr, nullptr);
+        if (str != nullptr) {
             int len = strlen(str);
-            ret = (char*) malloc((len + 1) * sizeof(char));
-            if (ret != NULL){
+            ret = (char *) malloc((len + 1) * sizeof(char));
+            if (ret != nullptr) {
                 memset(ret, 0, len + 1);
                 memcpy(ret, str, len);
             }
@@ -30,10 +28,10 @@ static char *jstringToC(JNIEnv * env, jstring jstr){
 }
 
 static bool equals(const char *str1, const char *str2) {
-    if (str1 == NULL && str2 == NULL) {
+    if (str1 == nullptr && str2 == nullptr) {
         return true;
     } else {
-        if (str1 != NULL && str2 != NULL) {
+        if (str1 != nullptr && str2 != nullptr) {
             return strcmp(str1, str2) == 0;
         } else {
             return false;
@@ -48,7 +46,8 @@ static bool equals(const char *str1, const char *str2) {
  *  jclassName      需要调用jar包中的类名
  *  jmethodName     需要调用的类中的静态方法
  */
-static void loadDex(JNIEnv *env, jstring jdexPath, jstring jodexPath, jstring jclassName, const char* methodName, jstring jarg1) {
+static void loadDex(JNIEnv *env, jstring jdexPath, jstring jodexPath, jstring jclassName,
+                    const char *methodName, jstring jarg1) {
 
     if (!jdexPath) {
         LOGD("MEM ERR");
@@ -71,19 +70,26 @@ static void loadDex(JNIEnv *env, jstring jdexPath, jstring jodexPath, jstring jc
     }
 
     jclass classloaderClass = env->FindClass("java/lang/ClassLoader");
-    jmethodID getsysClassloaderMethod = env->GetStaticMethodID(classloaderClass, "getSystemClassLoader", "()Ljava/lang/ClassLoader;");
+    jmethodID getsysClassloaderMethod = env->GetStaticMethodID(classloaderClass,
+                                                               "getSystemClassLoader",
+                                                               "()Ljava/lang/ClassLoader;");
     jobject loader = env->CallStaticObjectMethod(classloaderClass, getsysClassloaderMethod);
     jclass dexLoaderClass = env->FindClass("dalvik/system/DexClassLoader");
-    jmethodID initDexLoaderMethod = env->GetMethodID(dexLoaderClass, "<init>", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
-    jobject dexLoader = env->NewObject(dexLoaderClass,initDexLoaderMethod, jdexPath, jodexPath, NULL, loader);
-    jmethodID findclassMethod = env->GetMethodID(dexLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+    jmethodID initDexLoaderMethod = env->GetMethodID(dexLoaderClass, "<init>",
+                                                     "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V");
+    jobject dexLoader = env->NewObject(dexLoaderClass, initDexLoaderMethod, jdexPath, jodexPath,
+                                       NULL, loader);
+    jmethodID findclassMethod = env->GetMethodID(dexLoaderClass, "findClass",
+                                                 "(Ljava/lang/String;)Ljava/lang/Class;");
 
     if (findclassMethod == NULL) {
-        findclassMethod = env->GetMethodID(dexLoaderClass, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+        findclassMethod = env->GetMethodID(dexLoaderClass, "loadClass",
+                                           "(Ljava/lang/String;)Ljava/lang/Class;");
     }
 
-    jclass javaClientClass = (jclass)env->CallObjectMethod(dexLoader, findclassMethod, jclassName);
-    jmethodID targetMethod = env->GetStaticMethodID(javaClientClass, methodName, "(Ljava/lang/String;)V");
+    jclass javaClientClass = (jclass) env->CallObjectMethod(dexLoader, findclassMethod, jclassName);
+    jmethodID targetMethod = env->GetStaticMethodID(javaClientClass, methodName,
+                                                    "(Ljava/lang/String;)V");
 
     if (targetMethod == NULL) {
         LOGD("target method(%s) not found", methodName);
@@ -135,8 +141,10 @@ static void forkAndSpecializePre(
         JNIEnv *env, jclass clazz, jint *_uid, jint *gid, jintArray *gids, jint *runtimeFlags,
         jobjectArray *rlimits, jint *mountExternal, jstring *seInfo, jstring *niceName,
         jintArray *fdsToClose, jintArray *fdsToIgnore, jboolean *is_child_zygote,
-        jstring *instructionSet, jstring *appDataDir, jboolean *isTopApp, jobjectArray *pkgDataInfoList,
-        jobjectArray *whitelistedDataInfoList, jboolean *bindMountAppDataDirs, jboolean *bindMountAppStorageDirs) {
+        jstring *instructionSet, jstring *appDataDir, jboolean *isTopApp,
+        jobjectArray *pkgDataInfoList,
+        jobjectArray *whitelistedDataInfoList, jboolean *bindMountAppDataDirs,
+        jboolean *bindMountAppStorageDirs) {
     pre(env, appDataDir, niceName);
 }
 
@@ -181,12 +189,6 @@ static void forkSystemServerPost(JNIEnv *env, jclass clazz, jint res) {
     }
 }
 
-static int shouldSkipUid(int uid) {
-    // by default, Riru only call module functions in "normal app processes" (10000 <= uid % 100000 <= 19999)
-    // false = don't skip
-    return false;
-}
-
 static void onModuleLoaded() {
     // called when the shared library of Riru core is loaded
 }
@@ -194,80 +196,36 @@ static void onModuleLoaded() {
 extern "C" {
 
 int riru_api_version;
-RiruApiV9 *riru_api_v9;
+const char *riru_magisk_module_path = nullptr;
+int *riru_allow_unload = nullptr;
 
-/*
- * Init will be called three times.
- *
- * The first time:
- *   Returns the highest version number supported by both Riru and the module.
- *
- *   arg: (int *) Riru's API version
- *   returns: (int *) the highest possible API version
- *
- * The second time:
- *   Returns the RiruModuleX struct created by the module.
- *   (X is the return of the first call)
- *
- *   arg: (RiruApiVX *) RiruApi strcut, this pointer can be saved for further use
- *   returns: (RiruModuleX *) RiruModule strcut
- *
- * The second time:
- *   Let the module to cleanup (such as RiruModuleX struct created before).
- *
- *   arg: null
- *   returns: (ignored)
- *
- */
-void *init(void *arg) {
-    static int step = 0;
-    step += 1;
-
-    static void *_module;
-
-    switch (step) {
-        case 1: {
-            auto core_max_api_version = *(int *) arg;
-            riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version : RIRU_MODULE_API_VERSION;
-            return &riru_api_version;
+static auto module = RiruVersionedModuleInfo{
+        .moduleApiVersion = RIRU_MODULE_API_VERSION,
+        .moduleInfo= RiruModuleInfo{
+                .supportHide = true,
+                .version = RIRU_MODULE_VERSION,
+                .versionName = RIRU_MODULE_VERSION_NAME,
+                .onModuleLoaded = onModuleLoaded,
+                .forkAndSpecializePre = forkAndSpecializePre,
+                .forkAndSpecializePost = forkAndSpecializePost,
+                .forkSystemServerPre = forkSystemServerPre,
+                .forkSystemServerPost = forkSystemServerPost,
+                .specializeAppProcessPre = specializeAppProcessPre,
+                .specializeAppProcessPost = specializeAppProcessPost
         }
-        case 2: {
-            switch (riru_api_version) {
-                // RiruApiV10 and RiruModuleInfoV10 are equal to V9
-                case 10:
-                case 9: {
-                    riru_api_v9 = (RiruApiV9 *) arg;
+};
 
-                    auto module = (RiruModuleInfoV9 *) malloc(sizeof(RiruModuleInfoV9));
-                    memset(module, 0, sizeof(RiruModuleInfoV9));
-                    _module = module;
+RiruVersionedModuleInfo *init(Riru *riru) {
+    auto core_max_api_version = riru->riruApiVersion;
+    riru_api_version = core_max_api_version <= RIRU_MODULE_API_VERSION ? core_max_api_version
+                                                                       : RIRU_MODULE_API_VERSION;
+    module.moduleApiVersion = riru_api_version;
 
-                    module->supportHide = true;
-
-                    module->version = RIRU_MODULE_VERSION;
-                    module->versionName = RIRU_MODULE_VERSION_NAME;
-                    module->onModuleLoaded = onModuleLoaded;
-                    module->shouldSkipUid = shouldSkipUid;
-                    module->forkAndSpecializePre = forkAndSpecializePre;
-                    module->forkAndSpecializePost = forkAndSpecializePost;
-                    module->specializeAppProcessPre = specializeAppProcessPre;
-                    module->specializeAppProcessPost = specializeAppProcessPost;
-                    module->forkSystemServerPre = forkSystemServerPre;
-                    module->forkSystemServerPost = forkSystemServerPost;
-                    return module;
-                }
-                default: {
-                    return nullptr;
-                }
-            }
-        }
-        case 3: {
-            free(_module);
-            return nullptr;
-        }
-        default: {
-            return nullptr;
-        }
+    riru_magisk_module_path = strdup(riru->magiskModulePath);
+    if (riru_api_version >= 25) {
+        riru_allow_unload = riru->allowUnload;
     }
+    return &module;
 }
+
 }
